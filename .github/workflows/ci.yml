@@ -1,0 +1,24 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:workerd
+      - name: Worker bundles (dry run, no deploy)
+        run: npx wrangler deploy --dry-run --outdir .wrangler/dry
+        env:
+          WRANGLER_SEND_METRICS: "false"

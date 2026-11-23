@@ -1,0 +1,54 @@
+{
+  "name": "@lavrox/ipwho-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the IPWho IP geolocation API (ipwho.org): look up IPs from Claude, Cursor, VS Code and other AI agents.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "ipwho-mcp": "dist/stdio.js"
+  },
+  "main": "dist/server.js",
+  "files": [
+    "dist/ipwho.js",
+    "dist/ipwho.d.ts",
+    "dist/server.js",
+    "dist/server.d.ts",
+    "dist/stdio.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.worker.json --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "test:workerd": "npm run build && node test/workerd-smoke.mjs",
+    "test:live": "npm run build && node test/live.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ip-geolocation",
+    "ipwho",
+    "geoip",
+    "ip-lookup"
+  ],
+  "homepage": "https://www.ipwho.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavrox/ipwho-mcp.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261123.1",
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.166.0"
+  }
+}

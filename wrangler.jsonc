@@ -1,0 +1,16 @@
+// Hosted IPWho MCP server. NOT deployed yet: Ross creates the Worker and the
+// mcp.ipwho.org custom domain after Gyanaa's review (see README "Hosted server").
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ipwho-mcp",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  // Logging off by default: the user key travels in a request header; enable only after
+  // confirming Workers Logs never captures request headers (Gyanaa review item).
+  "observability": { "enabled": false }
+  // Custom domain is attached by Ross in the Cloudflare dashboard (or add a
+  // "routes": [{ "pattern": "mcp.ipwho.org", "custom_domain": true }] entry after review).
+  // No secrets: each user's own IPWho key arrives per request in a header.
+}
