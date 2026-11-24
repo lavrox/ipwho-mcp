@@ -1,0 +1,35 @@
+name: Publish to MCP Registry
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.repository == 'lavrox/ipwho-mcp' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install verified mcp-publisher v1.8.16
+        shell: bash
+        run: |
+          install_dir="$(mktemp -d "$RUNNER_TEMP/mcp-publisher.XXXXXX")"
+          cd "$install_dir"
+          archive=mcp-publisher_linux_amd64.tar.gz
+          curl --fail --silent --show-error --location --proto '=https' \
+            --output "$archive" \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.16/$archive"
+          printf '%s  %s\n' '6e2f799550cf843c6fd3350498d56cc49be3dc0af1e6237eb0e6435c7a9d5c05' "$archive" | sha256sum --check
+          tar -xzf "$archive" mcp-publisher
+          printf '%s\n' "$install_dir" >> "$GITHUB_PATH"
+
+      - name: Validate and publish server.json
+        run: |
+          mcp-publisher validate server.json
+          mcp-publisher login github-oidc
+          mcp-publisher publish server.json
