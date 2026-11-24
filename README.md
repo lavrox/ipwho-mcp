@@ -113,6 +113,7 @@ Claude Desktop's and claude.ai's custom connectors expect OAuth sign-in rather t
 - It's sent to `api.ipwho.org` only, in the `X-API-Key` header, and never in a URL.
 - It's never logged or echoed back in error messages.
 - The hosted server is stateless: it keeps no sessions and stores nothing. Each request carries its own key, which is used for that request only.
+- The hosted server logs one line per request for operations: the HTTP method, path, status, duration and the MCP method or tool name. It never logs headers, your key, the IP addresses you look up, or results. Cloudflare's automatic request logs are switched off.
 
 ## Development
 
@@ -126,7 +127,7 @@ IPWHO_API_KEY=... npm run test:live   # live API through the local server (uses 
 
 **Deploying the hosted server:** merging to `main` runs `.github/workflows/deploy.yml`. It runs the tests, then `wrangler deploy`, then checks mcp.ipwho.org. It needs the repo secrets `CF_API_TOKEN` (a Cloudflare "Edit Cloudflare Workers" token that also has Zone → Workers Routes → Edit on ipwho.org) and `CF_ACCOUNT_ID`. The deploy attaches the custom domain `mcp.ipwho.org` itself (`routes` in `wrangler.jsonc`).
 
-Layout: `src/ipwho.ts` (API client) · `src/server.ts` (tool definitions, shared) · `src/stdio.ts` (local entry) · `src/worker.ts` (hosted entry, Cloudflare Worker) · `wrangler.jsonc` (Worker config; no secrets, logging off).
+Layout: `src/ipwho.ts` (API client) · `src/server.ts` (tool definitions, shared) · `src/stdio.ts` (local entry) · `src/worker.ts` (hosted entry, Cloudflare Worker) · `wrangler.jsonc` (Worker config; no secrets; Workers Logs on for our own log lines only).
 
 ## License
 
