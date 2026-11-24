@@ -1,0 +1,47 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.lavrox/ipwho-mcp",
+  "title": "IPWho MCP Server",
+  "description": "IP geolocation for AI agents via the IPWho API: single, bulk and self IP lookups, local or hosted.",
+  "websiteUrl": "https://www.ipwho.org/docs/api/mcp-server",
+  "repository": {
+    "url": "https://github.com/lavrox/ipwho-mcp",
+    "source": "github",
+    "id": "1468238616"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@ipwho/mcp-server",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "IPWHO_API_KEY",
+          "description": "Your IPWho API key (free plan at https://www.ipwho.org/free-plan). Lookups count against the key's plan quota.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.ipwho.org/mcp",
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "description": "Your IPWho API key. Authorization: Bearer <key> is also accepted. No key, no service.",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

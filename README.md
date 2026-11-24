@@ -2,7 +2,7 @@
 
 An [MCP](https://modelcontextprotocol.io) server for the [IPWho](https://www.ipwho.org) IP geolocation API. It lets AI agents (Claude, Cursor, VS Code Copilot and other MCP clients) look up IP addresses directly.
 
-> **Status: pre-release (v0.1.0).** It isn't published to npm yet, and `mcp.ipwho.org` isn't live yet. The setup below shows how it will work once both are released.
+> **Status: v0.1.0.** The hosted server at `mcp.ipwho.org` is live. The npm package `@ipwho/mcp-server` is published from this repository; `ipwho-mcp` is an alias that runs the same server. Setup guide with per-client tabs: [ipwho.org/docs/api/mcp-server](https://www.ipwho.org/docs/api/mcp-server).
 
 You need an IPWho API key ([sign up at ipwho.org](https://www.ipwho.org)). Every lookup counts against your plan's quota, the same as calling the API directly.
 
@@ -87,7 +87,7 @@ Settings → Developer → Edit Config (`claude_desktop_config.json`):
 }
 ```
 
-## Hosted setup (`https://mcp.ipwho.org/mcp`, not live yet)
+## Hosted setup (`https://mcp.ipwho.org/mcp`)
 
 The hosted server uses Streamable HTTP. Send your key in a header on every request, either `X-API-Key: YOUR_KEY` or `Authorization: Bearer YOUR_KEY`. Without a key it returns `401`. A key in the URL is refused.
 
@@ -123,6 +123,8 @@ npm test               # 20 tests against a local mock API, local and hosted
 npm run test:workerd   # the Worker in Cloudflare's local runtime (wrangler dev --local), against the mock
 IPWHO_API_KEY=... npm run test:live   # live API through the local server (uses ~5 lookups)
 ```
+
+**Publishing to npm (maintainers):** `server.json` (official MCP registry entry) and `mcpName` in `package.json` must keep the same name, `io.github.lavrox/ipwho-mcp`, and the versions must match. From a fresh clone of `main`: `npm ci && npm test && npm publish --access public`, then `cd packages/ipwho-mcp && npm publish --access public` (the alias depends on the exact version just published). Registry entry: `mcp-publisher login github`, then `mcp-publisher publish`.
 
 **Deploying the hosted server:** merging to `main` runs `.github/workflows/deploy.yml`. It runs the tests, then `wrangler deploy`, then checks mcp.ipwho.org. It needs the repo secrets `CF_API_TOKEN` (a Cloudflare "Edit Cloudflare Workers" token that also has Zone → Workers Routes → Edit on ipwho.org) and `CF_ACCOUNT_ID`. The deploy attaches the custom domain `mcp.ipwho.org` itself (`routes` in `wrangler.jsonc`).
 

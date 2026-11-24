@@ -4,7 +4,7 @@
   "description": "MCP server for the IPWho IP geolocation API (ipwho.org): look up IPs from Claude, Cursor, VS Code and other AI agents.",
   "license": "MIT",
   "type": "module",
-  "private": true,
+  "mcpName": "io.github.lavrox/ipwho-mcp",
   "bin": {
     "ipwho-mcp": "dist/stdio.js"
   },
@@ -23,6 +23,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run typecheck && npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",
     "test:workerd": "npm run build && node test/workerd-smoke.mjs",
