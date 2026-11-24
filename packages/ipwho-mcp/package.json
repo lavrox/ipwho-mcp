@@ -1,0 +1,27 @@
+{
+  "name": "ipwho-mcp",
+  "version": "0.1.0",
+  "description": "Alias for @ipwho/mcp-server, the official MCP server for the IPWho IP geolocation API (ipwho.org). Install @ipwho/mcp-server instead.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "ipwho-mcp": "bin.js"
+  },
+  "files": [
+    "bin.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["mcp", "model-context-protocol", "ip-geolocation", "ipwho", "geoip"],
+  "homepage": "https://www.ipwho.org/docs/api/mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lavrox/ipwho-mcp.git",
+    "directory": "packages/ipwho-mcp"
+  },
+  "dependencies": {
+    "@ipwho/mcp-server": "0.1.0"
+  }
+}
