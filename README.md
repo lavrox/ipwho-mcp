@@ -124,6 +124,8 @@ npm run test:workerd   # the Worker in Cloudflare's local runtime (wrangler dev 
 IPWHO_API_KEY=... npm run test:live   # live API through the local server (uses ~5 lookups)
 ```
 
+**Deploying the hosted server:** merging to `main` runs `.github/workflows/deploy.yml`. It runs the tests, then `wrangler deploy`, then checks mcp.ipwho.org. It needs the repo secrets `CF_API_TOKEN` (Cloudflare "Edit Cloudflare Workers" token) and `CF_ACCOUNT_ID`. The custom domain `mcp.ipwho.org` is attached once in the Cloudflare dashboard.
+
 Layout: `src/ipwho.ts` (API client) · `src/server.ts` (tool definitions, shared) · `src/stdio.ts` (local entry) · `src/worker.ts` (hosted entry, Cloudflare Worker) · `wrangler.jsonc` (Worker config; no secrets, logging off).
 
 ## License

@@ -1,5 +1,6 @@
-// Hosted IPWho MCP server. NOT deployed yet: Ross creates the Worker and the
-// mcp.ipwho.org custom domain after Gyanaa's review (see README "Hosted server").
+// Hosted IPWho MCP server. Deployed by .github/workflows/deploy.yml on merge to main
+// (the first deploy creates the Worker). Ross attaches the mcp.ipwho.org custom domain
+// once in the Cloudflare dashboard.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ipwho-mcp",

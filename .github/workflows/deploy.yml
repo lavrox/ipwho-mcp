@@ -1,0 +1,52 @@
+name: deploy
+# Deploys the hosted MCP server (Cloudflare Worker "ipwho-mcp") when a PR is merged to main.
+# Needs two repo secrets (same names as the ipwho.org and lavrox.com repos):
+#   CF_API_TOKEN   - Cloudflare API token, "Edit Cloudflare Workers" template
+#   CF_ACCOUNT_ID  - the Cloudflare account that holds the ipwho.org zone
+# The first deploy creates the Worker. Attach the custom domain mcp.ipwho.org once in the
+# Cloudflare dashboard (Workers > ipwho-mcp > Settings > Domains & Routes).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check secrets are set
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::error::Repo secrets CF_API_TOKEN and CF_ACCOUNT_ID must be set (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:workerd
+      - name: Deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx wrangler deploy
+      - name: Smoke test mcp.ipwho.org (informational until the custom domain is attached)
+        continue-on-error: true
+        run: |
+          set -e
+          code=$(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 ipwho-mcp-deploy-check" https://mcp.ipwho.org/)
+          echo "GET / -> $code"; [ "$code" = 200 ]
+          code=$(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 ipwho-mcp-deploy-check" -X POST -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}' https://mcp.ipwho.org/mcp)
+          echo "POST /mcp without a key -> $code (expect 401)"; [ "$code" = 401 ]
