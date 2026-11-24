@@ -104,3 +104,25 @@ test("hosted: GET and DELETE on /mcp -> 405 (stateless, POST only)", async () =>
     assert.equal(res.status, 405, method);
   }
 });
+
+test("hosted: logs one safe line per request, never the key or looked-up IPs", async () => {
+  const lines = [];
+  const orig = console.log;
+  console.log = (...a) => lines.push(a.join(" "));
+  try {
+    const client = await connect({ "X-API-Key": GOOD_KEY });
+    await client.callTool({ name: "lookup_ip", arguments: { ip: "8.8.4.4" } });
+    await client.close();
+    await workerFetch(`${ORIGIN}/mcp?apiKey=${GOOD_KEY}`, { method: "POST", body: "{}" });
+  } finally {
+    console.log = orig;
+  }
+  const all = lines.join("\n");
+  assert.ok(!all.includes(GOOD_KEY), "key must never be logged");
+  assert.ok(!all.includes("8.8.4.4"), "looked-up IPs must never be logged");
+  const entries = lines.map((l) => JSON.parse(l));
+  assert.ok(entries.every((e) => e.event === "mcp_request"));
+  assert.ok(entries.some((e) => e.status === 200 && e.rpc?.includes("tools/call:lookup_ip")));
+  assert.ok(entries.some((e) => e.status === 400 && e.path === "/mcp"));
+  for (const e of entries) assert.deepEqual(Object.keys(e).sort(), ["event", "method", "ms", "path", "rpc", "status"].filter((k) => k !== "rpc" || "rpc" in e).sort());
+});

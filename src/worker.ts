@@ -5,6 +5,9 @@
  *   `X-API-Key: <key>` or `Authorization: Bearer <key>`. It is forwarded to api.ipwho.org
  *   in X-API-Key, so the user's normal plan quotas apply.
  * - The key is never logged, stored, or put in a URL. The Worker holds no secrets of its own.
+ * - Logging: one JSON line per request (logRequest below) with the HTTP method, path, status,
+ *   duration and the MCP method/tool name. Never headers, the key, query strings, tool
+ *   arguments (the IPs users look up) or results.
  * - lookup_me is not offered: /me would return Cloudflare's IP, not the user's.
  */
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -34,6 +37,42 @@ export function extractApiKey(headers: Headers): string | undefined {
 }
 
 export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const started = Date.now();
+    const rpc = await describeRpc(request);
+    let status = 500;
+    try {
+      const res = await handle(request, env);
+      status = res.status;
+      return res;
+    } finally {
+      logRequest({ method: request.method, path: new URL(request.url).pathname, status, ms: Date.now() - started, rpc });
+    }
+  },
+};
+
+/** One safe log line per request. Only these fields; never headers, keys, query strings or tool arguments. */
+export function logRequest(entry: { method: string; path: string; status: number; ms: number; rpc?: string[] }): void {
+  console.log(JSON.stringify({ event: "mcp_request", ...entry, path: entry.path.slice(0, 64) }));
+}
+
+/** MCP JSON-RPC method names (and tool names for tools/call) from a POST /mcp body; nothing else. */
+async function describeRpc(request: Request): Promise<string[] | undefined> {
+  if (request.method !== "POST" || new URL(request.url).pathname !== MCP_PATH) return undefined;
+  try {
+    const body: unknown = await request.clone().json();
+    const msgs = (Array.isArray(body) ? body : [body]).slice(0, 5) as Array<{ method?: unknown; params?: { name?: unknown } }>;
+    return msgs.map((m) => {
+      const method = typeof m?.method === "string" ? m.method.slice(0, 40) : "response";
+      const tool = method === "tools/call" && typeof m.params?.name === "string" ? `:${m.params.name.slice(0, 40)}` : "";
+      return method + tool;
+    });
+  } catch {
+    return ["unparsed"];
+  }
+}
+
+const handler = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
@@ -84,6 +123,8 @@ export default {
     }
   },
 };
+
+const handle = (request: Request, env: Env) => handler.fetch(request, env);
 
 function rpcError(code: number, message: string) {
   return { jsonrpc: "2.0", error: { code, message }, id: null };

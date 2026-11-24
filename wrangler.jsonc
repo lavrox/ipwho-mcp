@@ -8,9 +8,15 @@
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
-  // Logging off by default: the user key travels in a request header; enable only after
-  // confirming Workers Logs never captures request headers (Gyanaa review item).
-  "observability": { "enabled": false },
+  // Workers Logs on (Gyanaa, LDEV-346): our own console.log lines only, see logRequest() in
+  // src/worker.ts (no headers, no key, no IPs). Cloudflare's automatic per-request
+  // invocation logs stay OFF because the user's key travels in a request header and
+  // Cloudflare doesn't document whether those logs record headers.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": false }
+  },
   // Custom domain: needs the deploy token to have Zone > Workers Routes > Edit on ipwho.org.
   "routes": [{ "pattern": "mcp.ipwho.org", "custom_domain": true }]
   // No secrets: each user's own IPWho key arrives per request in a header.
