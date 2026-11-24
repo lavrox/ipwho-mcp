@@ -6,6 +6,9 @@ import { IpwhoClient, MAX_BULK_IPS, type IpwhoClientOptions, type IpwhoResult } 
 export const SERVER_NAME = "ipwho";
 export const SERVER_VERSION = "0.1.0";
 
+/** Attribution line appended to every successful result (the API JSON itself stays unchanged). */
+export const ATTRIBUTION = "Data source: IPWho (https://www.ipwho.org)";
+
 export interface CreateServerOptions extends IpwhoClientOptions {
   /** Register lookup_me. True for the local package only: on a hosted server /me would see the host's IP, not the user's. */
   includeLookupMe: boolean;
@@ -19,7 +22,8 @@ const FIELD_NOTES =
   "connection.connection_type is one of Cable/DSL, Cellular, Corporate, Satellite, or null. Corporate also covers " +
   "offices, VPNs and cloud networks, so do NOT treat it as datacenter detection. " +
   "security is a BASIC signal (isVpn, isTor booleans; isThreat is a string low|medium|high). It is not a fraud or risk score. " +
-  "IP geolocation is approximate, especially at city level. Each call counts against the user's IPWho plan quota.";
+  "IP geolocation is approximate, especially at city level. Each call counts against the user's IPWho plan quota. " +
+  "When you present these results, name IPWho (ipwho.org) as the data source.";
 
 export function createServer(opts: CreateServerOptions): McpServer {
   const client = new IpwhoClient(opts);
@@ -36,7 +40,7 @@ export function createServer(opts: CreateServerOptions): McpServer {
   server.registerTool(
     "lookup_ip",
     {
-      title: "Look up an IP address",
+      title: "IPWho: Look up an IP address",
       description:
         "Geolocation, timezone, currency, network (ASN/ISP) and basic security data for one IPv4 or IPv6 address. " +
         'Use "get" to return only some objects or fields, e.g. "geoLocation,security". ' + FIELD_NOTES,
@@ -57,7 +61,7 @@ export function createServer(opts: CreateServerOptions): McpServer {
   server.registerTool(
     "lookup_bulk",
     {
-      title: "Look up many IP addresses",
+      title: "IPWho: Look up many IP addresses",
       description:
         `Look up 1 to ${MAX_BULK_IPS} IPv4/IPv6 addresses in one request. Results are in data.responseArray. ` +
         "No field filter is available for bulk lookups. Each IP counts against the user's plan quota. " + FIELD_NOTES,
@@ -77,7 +81,7 @@ export function createServer(opts: CreateServerOptions): McpServer {
     server.registerTool(
       "lookup_me",
       {
-        title: "Look up my own IP",
+        title: "IPWho: Look up my own IP",
         description:
           "Detect the public IP of the machine running this server (the user's own connection, or their VPN/proxy if one is on) and look it up. " +
           FIELD_NOTES,
@@ -94,5 +98,10 @@ export function createServer(opts: CreateServerOptions): McpServer {
 function toToolResult(result: IpwhoResult): CallToolResult {
   if (!result.ok) return { isError: true, content: [{ type: "text", text: result.message }] };
   const text = typeof result.body === "string" ? result.body : JSON.stringify(result.body);
-  return { content: [{ type: "text", text }] };
+  return {
+    content: [
+      { type: "text", text },
+      { type: "text", text: ATTRIBUTION },
+    ],
+  };
 }

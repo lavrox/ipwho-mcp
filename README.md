@@ -16,7 +16,7 @@ You need an IPWho API key ([sign up at ipwho.org](https://www.ipwho.org)). Every
 
 `lookup_me` isn't offered on the hosted server: there it would look up Cloudflare's IP, not yours.
 
-**What you get back:** the API's JSON, unchanged: `{ "success": true, "data": { … } }`, with the objects `geoLocation`, `timezone`, `flag`, `currency`, `connection`, `security` and `userAgent`. Field names keep their exact wire casing (`postal_Code`, `flag_Icon`, `asn_number`). See the [API docs](https://www.ipwho.org/docs).
+**What you get back:** two parts. First, the API's JSON, unchanged: `{ "success": true, "data": { … } }`, with the objects `geoLocation`, `timezone`, `flag`, `currency`, `connection`, `security` and `userAgent`. Field names keep their exact wire casing (`postal_Code`, `flag_Icon`, `asn_number`). See the [API docs](https://www.ipwho.org/docs). Second, a one-line attribution: `Data source: IPWho (https://www.ipwho.org)`. The tool descriptions also ask the agent to name IPWho as the source.
 
 **Honest limits** (the tool descriptions tell the agent these too):
 
@@ -32,7 +32,7 @@ The server reads your key from the `IPWHO_API_KEY` environment variable. Node.js
 ### Claude Code
 
 ```bash
-claude mcp add ipwho --env IPWHO_API_KEY=YOUR_KEY -- npx -y @lavrox/ipwho-mcp
+claude mcp add ipwho --env IPWHO_API_KEY=YOUR_KEY -- npx -y @ipwho/mcp-server
 ```
 
 ### Claude Desktop
@@ -44,7 +44,7 @@ Settings → Developer → Edit Config (`claude_desktop_config.json`):
   "mcpServers": {
     "ipwho": {
       "command": "npx",
-      "args": ["-y", "@lavrox/ipwho-mcp"],
+      "args": ["-y", "@ipwho/mcp-server"],
       "env": { "IPWHO_API_KEY": "YOUR_KEY" }
     }
   }
@@ -60,7 +60,7 @@ Settings → Developer → Edit Config (`claude_desktop_config.json`):
   "mcpServers": {
     "ipwho": {
       "command": "npx",
-      "args": ["-y", "@lavrox/ipwho-mcp"],
+      "args": ["-y", "@ipwho/mcp-server"],
       "env": { "IPWHO_API_KEY": "YOUR_KEY" }
     }
   }
@@ -80,7 +80,7 @@ Settings → Developer → Edit Config (`claude_desktop_config.json`):
     "ipwho": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@lavrox/ipwho-mcp"],
+      "args": ["-y", "@ipwho/mcp-server"],
       "env": { "IPWHO_API_KEY": "${input:ipwho-key}" }
     }
   }

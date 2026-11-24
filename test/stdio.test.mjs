@@ -35,6 +35,8 @@ test("local: lists lookup_ip, lookup_bulk, lookup_me with read-only annotations"
     assert.match(t.description, /BASIC signal/);
     assert.match(t.description, /not a fraud or risk score/);
     assert.match(t.description, /Cable\/DSL, Cellular, Corporate, Satellite/);
+    assert.match(t.description, /name IPWho \(ipwho\.org\) as the data source/);
+    assert.match(t.title, /^IPWho: /);
   }
   await client.close();
 });
@@ -49,6 +51,8 @@ test("local: lookup_ip returns the API JSON verbatim, key only in X-API-Key head
   assert.equal(body.data.flag.flag_Icon, "🇺🇸");
   assert.equal(body.data.connection.asn_number, 15169);
   assert.equal(body.data.security.isThreat, "low");
+  assert.equal(r.content.length, 2);
+  assert.equal(r.content[1].text, "Data source: IPWho (https://www.ipwho.org)");
   const last = api.requests.at(-1);
   assert.equal(last.url, "/ip/8.8.8.8");
   assert.equal(last.headers["x-api-key"], GOOD_KEY);
@@ -130,6 +134,7 @@ test("local: bad key gives a clear error that does not echo the key", async () =
   assert.equal(r.isError, true);
   assert.match(text(r), /rejected the API key \(invalid_api_key\)/);
   assert.ok(!text(r).includes(badKey));
+  assert.equal(r.content.length, 1, "errors carry no attribution line");
   await client.close();
 });
 
