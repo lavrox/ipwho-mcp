@@ -1,0 +1,38 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:workerd
+      - name: Worker bundles (dry run, no deploy)
+        run: npx wrangler deploy --dry-run --outdir .wrangler/dry
+        env:
+          WRANGLER_SEND_METRICS: "false"
+      - name: Check Cloudflare deploy credentials (read-only API calls; deploys nothing)
+        # Only on PRs from this repo (forks get no secrets) and only if the secrets exist.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::warning::CF_API_TOKEN / CF_ACCOUNT_ID not set; skipping credential check."; exit 0
+          fi
+          status=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify | jq -r '.result.status // "invalid"')
+          echo "Token status: $status"; [ "$status" = active ]
+          ok=$(curl -s -H "Authorization: Bearer $CF_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/workers/scripts" | jq -r '.success')
+          echo "Token can read Workers in CF_ACCOUNT_ID: $ok"; [ "$ok" = true ]
