@@ -1,10 +1,10 @@
 name: deploy
 # Deploys the hosted MCP server (Cloudflare Worker "ipwho-mcp") when a PR is merged to main.
 # Needs two repo secrets (same names as the ipwho.org and lavrox.com repos):
-#   CF_API_TOKEN   - Cloudflare API token, "Edit Cloudflare Workers" template
+#   CF_API_TOKEN   - Cloudflare API token, "Edit Cloudflare Workers" template, with
+#                    Zone > Workers Routes > Edit on ipwho.org (for the custom domain)
 #   CF_ACCOUNT_ID  - the Cloudflare account that holds the ipwho.org zone
-# The first deploy creates the Worker. Attach the custom domain mcp.ipwho.org once in the
-# Cloudflare dashboard (Workers > ipwho-mcp > Settings > Domains & Routes).
+# The first deploy creates the Worker and attaches mcp.ipwho.org (see wrangler.jsonc routes).
 on:
   push:
     branches: [main]
@@ -42,11 +42,15 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
         run: npx wrangler deploy
-      - name: Smoke test mcp.ipwho.org (informational until the custom domain is attached)
+      - name: Smoke test mcp.ipwho.org (informational; a new certificate can take a few minutes)
         continue-on-error: true
         run: |
-          set -e
-          code=$(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 ipwho-mcp-deploy-check" https://mcp.ipwho.org/)
+          UA="Mozilla/5.0 ipwho-mcp-deploy-check"
+          for i in $(seq 18); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" https://mcp.ipwho.org/ || true)
+            [ "$code" = 200 ] && break
+            echo "GET / -> $code, retrying in 10 s"; sleep 10
+          done
           echo "GET / -> $code"; [ "$code" = 200 ]
-          code=$(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 ipwho-mcp-deploy-check" -X POST -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}' https://mcp.ipwho.org/mcp)
+          code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X POST -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{}' https://mcp.ipwho.org/mcp)
           echo "POST /mcp without a key -> $code (expect 401)"; [ "$code" = 401 ]

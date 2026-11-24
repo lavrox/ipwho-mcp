@@ -1,6 +1,6 @@
-// Hosted IPWho MCP server. Deployed by .github/workflows/deploy.yml on merge to main
-// (the first deploy creates the Worker). Ross attaches the mcp.ipwho.org custom domain
-// once in the Cloudflare dashboard.
+// Hosted IPWho MCP server. Deployed by .github/workflows/deploy.yml on merge to main.
+// The first deploy creates the Worker AND attaches the custom domain mcp.ipwho.org
+// (Cloudflare creates the DNS record and certificate itself).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ipwho-mcp",
@@ -10,8 +10,8 @@
   "workers_dev": false,
   // Logging off by default: the user key travels in a request header; enable only after
   // confirming Workers Logs never captures request headers (Gyanaa review item).
-  "observability": { "enabled": false }
-  // Custom domain is attached by Ross in the Cloudflare dashboard (or add a
-  // "routes": [{ "pattern": "mcp.ipwho.org", "custom_domain": true }] entry after review).
+  "observability": { "enabled": false },
+  // Custom domain: needs the deploy token to have Zone > Workers Routes > Edit on ipwho.org.
+  "routes": [{ "pattern": "mcp.ipwho.org", "custom_domain": true }]
   // No secrets: each user's own IPWho key arrives per request in a header.
 }
