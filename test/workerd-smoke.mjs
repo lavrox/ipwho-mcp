@@ -37,7 +37,8 @@ try {
     await new Promise((r) => setTimeout(r, 500));
   }
 
-  await check("info page", async () => assert.equal((await (await fetch(`${base}/`)).json()).mcp_endpoint, `${base}/mcp`));
+  // wrangler dev rewrites the host to the configured route (mcp.ipwho.org), so check the path only.
+  await check("info page", async () => assert.match((await (await fetch(`${base}/`)).json()).mcp_endpoint, /\/mcp$/));
   await check("no key -> 401", async () => {
     const r = await fetch(`${base}/mcp`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" }, body: "{}" });
     assert.equal(r.status, 401);
