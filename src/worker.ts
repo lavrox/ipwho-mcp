@@ -85,7 +85,8 @@ const handler = {
         mcp_endpoint: `${url.origin}${MCP_PATH}`,
         transport: "streamable-http",
         auth: "Send your IPWho API key in the X-API-Key header or as Authorization: Bearer <key>.",
-        docs: "https://github.com/lavrox/ipwho-mcp",
+        docs: "https://www.ipwho.org/docs/api/mcp-server",
+        source: "https://github.com/lavrox/ipwho-mcp",
       });
     }
 
